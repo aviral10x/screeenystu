@@ -26,6 +26,19 @@
       "csp": null
     }
   },
+  "bundle": {
+    "active": true,
+    "targets": ["dmg", "app"],
+    "category": "DeveloperTool",
+    "copyright": "© 2026 ScreenCraft",
+    "shortDescription": "Beautiful screen recordings, effortlessly",
+    "longDescription": "ScreenCraft is a premium screen recording and editing app for macOS. Record, edit with auto-zoom, add visual polish, and share in seconds.",
+    "macOS": {
+      "entitlements": null,
+      "minimumSystemVersion": "13.0",
+      "frameworks": []
+    }
+  },
   "plugins": {
     "dialog": {},
     "fs": {

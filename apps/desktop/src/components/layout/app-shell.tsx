@@ -7,18 +7,25 @@ import { InspectorPanel } from '../inspector/inspector-panel';
 import { RecordingSetup } from '../recording/recording-setup';
 import { RecordingOverlay } from '../recording/recording-overlay';
 import { ExportDialog } from '../export/export-dialog';
+import { QuickShare } from '../share/quick-share';
 import { useUIStore } from '@/stores/ui-store';
 import { useRecordingStore } from '@/stores/recording-store';
 import { useShortcuts } from '@/hooks/use-shortcuts';
+import { useAutoSave } from '@/hooks/use-auto-save';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function AppShell() {
   const { view, sidebarOpen, inspectorOpen, timelineHeight } = useUIStore();
   const recordingStatus = useRecordingStore((s) => s.status);
   const [showExport, setShowExport] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [lastExportPath, setLastExportPath] = useState<string | null>(null);
 
   // Global keyboard shortcuts
   useShortcuts();
+
+  // Auto-save project periodically
+  useAutoSave();
 
   // Listen for ⌘E export shortcut
   useEffect(() => {
@@ -113,6 +120,13 @@ export function AppShell() {
 
       {/* Export dialog */}
       <ExportDialog isOpen={showExport} onClose={() => setShowExport(false)} />
+
+      {/* Quick share widget */}
+      <QuickShare
+        isOpen={showShare}
+        onClose={() => setShowShare(false)}
+        exportedFilePath={lastExportPath}
+      />
     </div>
   );
 }

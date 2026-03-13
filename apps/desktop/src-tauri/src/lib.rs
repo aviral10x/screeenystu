@@ -53,6 +53,11 @@ pub fn run() {
             commands::timeline::remove_speed_segment,
             commands::timeline::get_speed_segments,
             commands::timeline::set_camera_layout,
+            // Share commands
+            commands::share::upload_and_share,
+            // Proxy commands
+            commands::proxy::generate_proxy,
+            commands::proxy::check_proxy,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ScreenCraft");

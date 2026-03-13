@@ -5,3 +5,5 @@ pub mod manifest;
 pub mod zoom;
 pub mod export;
 pub mod timeline;
+pub mod share;
+pub mod proxy;
