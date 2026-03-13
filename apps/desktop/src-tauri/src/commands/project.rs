@@ -1,6 +1,75 @@
 use crate::state::AppState;
 use project_model::Project;
-use tauri::State;
+use std::path::PathBuf;
+use tauri::{AppHandle, Manager, State};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProjectMetadata {
+    pub id: String,
+    pub name: String,
+    pub path: String,
+    pub last_modified: u64,
+}
+
+/// Get the default projects directory (~/Movies/ScreenCraft or ~/Documents/ScreenCraft)
+#[tauri::command]
+pub fn get_default_projects_dir(app_handle: AppHandle) -> Result<String, String> {
+    let base_dir = app_handle
+        .path()
+        .video_dir()
+        .unwrap_or_else(|_| app_handle.path().document_dir().unwrap_or_else(|_| PathBuf::from(".")));
+
+    let projects_dir = base_dir.join("ScreenCraft");
+
+    if !projects_dir.exists() {
+        std::fs::create_dir_all(&projects_dir).map_err(|e| e.to_string())?;
+    }
+
+    Ok(projects_dir.to_string_lossy().to_string())
+}
+
+/// List recent projects from the default directory
+#[tauri::command]
+pub fn list_recent_projects(app_handle: AppHandle) -> Result<Vec<ProjectMetadata>, String> {
+    let projects_dir_str = get_default_projects_dir(app_handle)?;
+    let projects_dir = PathBuf::from(projects_dir_str);
+
+    let mut projects = Vec::new();
+
+    if let Ok(entries) = std::fs::read_dir(&projects_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                let project_file = path.join("project.json");
+                if project_file.exists() {
+                    if let Ok(json) = std::fs::read_to_string(&project_file) {
+                        if let Ok(project) = Project::from_json(&json) {
+                            let metadata = entry.metadata().ok();
+                            let last_modified = metadata
+                                .and_then(|m| m.modified().ok())
+                                .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok())
+                                .map(|d| d.as_secs())
+                                .unwrap_or(0);
+
+                            projects.push(ProjectMetadata {
+                                id: project.id.to_string(),
+                                name: project.name,
+                                path: path.to_string_lossy().to_string(),
+                                last_modified,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Sort by last modified descending
+    projects.sort_by(|a, b| b.last_modified.cmp(&a.last_modified));
+
+    Ok(projects)
+}
 
 /// Create a new project.
 #[tauri::command]

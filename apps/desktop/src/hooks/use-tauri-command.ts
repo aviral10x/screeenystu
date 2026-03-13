@@ -17,6 +17,8 @@ export const projectCommands = {
   getState: () => tauriCommand<string>('get_project_state'),
   undo: () => tauriCommand<string>('undo'),
   redo: () => tauriCommand<string>('redo'),
+  getDefaultProjectsDir: () => tauriCommand<string>('get_default_projects_dir'),
+  listRecentProjects: () => tauriCommand<Array<{ id: string; name: string; path: string; last_modified: number }>>('list_recent_projects'),
   createFromRecording: (name: string, captureDir: string) =>
     tauriCommand<string>('create_project_from_recording', {
       name: name,

@@ -12,7 +12,10 @@ import { useUIStore } from '@/stores/ui-store';
 import { useRecordingStore } from '@/stores/recording-store';
 import { useShortcuts } from '@/hooks/use-shortcuts';
 import { useAutoSave } from '@/hooks/use-auto-save';
+import { projectCommands } from '@/hooks/use-tauri-command';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import { hydrateProject } from '@/stores/project-store';
 
 export function AppShell() {
   const { view, sidebarOpen, inspectorOpen, timelineHeight } = useUIStore();
@@ -133,14 +136,34 @@ export function AppShell() {
 
 function HomeView() {
   const setView = useUIStore((s) => s.setView);
+  const { data: recentProjects, isLoading } = useQuery({
+    queryKey: ['recent-projects'],
+    queryFn: () => projectCommands.listRecentProjects(),
+  });
+
+  const loadProject = async (path: string) => {
+    try {
+      const jsonStr = await projectCommands.load(path);
+      // The path passed here is the project.json file, we want the directory path as the project path
+      const dirPath = path.substring(0, path.lastIndexOf('/'));
+      hydrateProject(jsonStr, dirPath);
+      setView('editor');
+    } catch (e) {
+      console.error('Failed to load project:', e);
+    }
+  };
 
   return (
-    <div className="flex-1 flex items-center justify-center">
+    <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="absolute inset-0 bg-surface-950">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent-600/10 blur-[100px] rounded-full pointer-events-none" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="text-center space-y-8"
+        className="relative z-10 text-center w-full max-w-lg space-y-8"
       >
         <div className="space-y-3">
           <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-accent-500 to-accent-700 flex items-center justify-center shadow-2xl shadow-accent-600/30">
@@ -151,8 +174,8 @@ function HomeView() {
               <path d="M12 17v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white">ScreenCraft</h1>
-          <p className="text-surface-400 text-sm max-w-md">
+          <h1 className="text-3xl font-bold text-white tracking-tight">ScreenCraft</h1>
+          <p className="text-surface-400 text-sm max-w-md mx-auto">
             Record, edit, and share beautiful screen recordings
           </p>
         </div>
@@ -167,25 +190,42 @@ function HomeView() {
             </svg>
             New Recording
           </button>
-          <button
-            onClick={() => setView('editor')}
-            className="h-12 px-6 rounded-xl bg-surface-800 text-surface-200 font-medium hover:bg-surface-700 transition-all border border-surface-700 active:scale-[0.98] flex items-center justify-center gap-2"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-            </svg>
-            Open Project
-          </button>
         </div>
 
-        <div className="mt-8">
-          <p className="text-surface-500 text-xs uppercase tracking-wider mb-4">Recent Projects</p>
-          <p className="text-surface-600 text-sm">No recent projects</p>
-        </div>
-
-        {/* Keyboard shortcut hint */}
-        <div className="mt-4 text-surface-600 text-[10px]">
-          Press <kbd className="px-1 py-0.5 rounded bg-surface-800 text-surface-400 font-mono">Space</kbd> to play · <kbd className="px-1 py-0.5 rounded bg-surface-800 text-surface-400 font-mono">⌘E</kbd> to export
+        <div className="mt-12 text-left bg-surface-900/50 rounded-2xl border border-surface-800 p-6 backdrop-blur-xl">
+          <p className="text-surface-300 font-medium mb-4">Recent Projects</p>
+          
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+            {isLoading ? (
+              <div className="flex items-center justify-center p-4">
+                <div className="w-5 h-5 rounded-full border-2 border-surface-600 border-t-accent-500 animate-spin" />
+              </div>
+            ) : recentProjects?.length ? (
+              recentProjects.map((project: any) => (
+                <button
+                  key={project.id}
+                  onClick={() => loadProject(`${project.path}/project.json`)}
+                  className="w-full flex flex-col text-left p-3 rounded-xl border border-transparent hover:border-surface-700 hover:bg-surface-800/80 transition-all group"
+                >
+                  <span className="text-sm font-medium text-surface-200 group-hover:text-accent-400 transition-colors">
+                    {project.name}
+                  </span>
+                  <span className="text-xs text-surface-500 mt-1">
+                    {new Date(project.last_modified * 1000).toLocaleString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </button>
+              ))
+            ) : (
+              <div className="text-center p-6 text-surface-500 text-sm bg-surface-900/30 rounded-xl border border-surface-800/50">
+                No recent projects found
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
     </div>

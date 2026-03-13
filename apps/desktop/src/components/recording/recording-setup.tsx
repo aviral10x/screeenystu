@@ -5,6 +5,7 @@ import { useUIStore } from '@/stores/ui-store';
 import { recordingCommands, sourceCommands, projectCommands } from '@/hooks/use-tauri-command';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui/button';
+import { AreaSelector } from './area-selector';
 
 export function RecordingSetup() {
   const {
@@ -38,6 +39,7 @@ export function RecordingSetup() {
   const setView = useUIStore((s) => s.setView);
   const [isLoading, setIsLoading] = useState(true);
   const [countdown, setCountdownValue] = useState<number | null>(null);
+  const [isSelectingArea, setIsSelectingArea] = useState(false);
 
   // Load available sources on mount
   useEffect(() => {
@@ -75,8 +77,7 @@ export function RecordingSetup() {
     loadSources();
   }, []);
 
-  // Start recording with countdown
-  const handleStartRecording = useCallback(async () => {
+  const startActualRecording = async (areaRect?: { x: number; y: number; width: number; height: number }) => {
     setStatus('countdown');
 
     // Countdown
@@ -86,18 +87,40 @@ export function RecordingSetup() {
     }
     setCountdownValue(null);
 
+    // Get default save directory and create a timestamped folder name
+    let outputDir = undefined;
+    try {
+      const baseDir = await projectCommands.getDefaultProjectsDir();
+      const date = new Date();
+      const timestamp = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}-${String(date.getMinutes()).padStart(2, '0')}-${String(date.getSeconds()).padStart(2, '0')}`;
+      outputDir = `${baseDir}/Recording_${timestamp}`;
+      setCaptureOutputDir(outputDir);
+    } catch (e) {
+      console.error('Failed to get default projects dir', e);
+    }
+
     // Build config
     const config: Record<string, unknown> = {
       mic_enabled: micEnabled,
       camera_enabled: cameraEnabled,
       system_audio_enabled: systemAudioEnabled,
       fps: 60,
+      output_dir: outputDir,
     };
 
     if (target === 'fullscreen') {
       config.target = { type: 'FullDisplay', display_id: selectedDisplayId ?? 1 };
     } else if (target === 'window') {
       config.target = { type: 'Window', window_id: selectedWindowId ?? 0 };
+    } else if (target === 'area') {
+      config.target = { 
+        type: 'Area', 
+        x: areaRect?.x ?? 0, 
+        y: areaRect?.y ?? 0, 
+        width: areaRect?.width ?? 1280, 
+        height: areaRect?.height ?? 720,
+        display_id: selectedDisplayId ?? 1
+      };
     }
 
     try {
@@ -108,7 +131,28 @@ export function RecordingSetup() {
       console.error('Failed to start recording:', e);
       setStatus('idle');
     }
+  };
+
+  // Start recording flow
+  const handleStartRecording = useCallback(async () => {
+    if (target === 'area') {
+      setIsSelectingArea(true);
+    } else {
+      startActualRecording();
+    }
   }, [target, selectedDisplayId, selectedWindowId, micEnabled, cameraEnabled, systemAudioEnabled, countdownSeconds]);
+
+  if (isSelectingArea) {
+    return (
+      <AreaSelector 
+        onSelect={(rect) => {
+          setIsSelectingArea(false);
+          startActualRecording(rect);
+        }} 
+        onCancel={() => setIsSelectingArea(false)} 
+      />
+    );
+  }
 
   if (countdown !== null) {
     return <CountdownOverlay seconds={countdown} />;

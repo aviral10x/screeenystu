@@ -5,17 +5,41 @@ import { useCanvasStore } from '@/stores/canvas-store';
 import { CursorOverlay } from './cursor-overlay';
 import { WindowFrame } from './window-frame';
 import { WebcamOverlay } from './webcam-overlay';
+import { convertFileSrc } from '@tauri-apps/api/core';
 
 export function PreviewCanvas() {
-  const { projectId, playheadMs, isPlaying, durationMs, setPlayhead, setDuration, setPlaying } =
+  const { projectId, projectPath, sources, playheadMs, isPlaying, durationMs, setPlayhead, setDuration, setPlaying } =
     useProjectStore();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { background, padding, cornerRadius, shadowEnabled, shadowIntensity, webcam, aspectRatio } =
     useCanvasStore();
 
-  const videoSrc = projectId ? getVideoSrc() : null;
+  const videoSrc = useMemo(() => {
+    if (!projectId || !projectPath) return null;
+    const screenSource = sources.find(s => s.mediaType === 'screen');
+    if (!screenSource || !screenSource.relativePath) return null;
+    return convertFileSrc(`${projectPath}/${screenSource.relativePath}`);
+  }, [projectId, projectPath, sources]);
+
+  const cameraSrc = useMemo(() => {
+    if (!projectId || !projectPath) return null;
+    const cameraSource = sources.find(s => s.mediaType === 'camera');
+    if (!cameraSource || !cameraSource.relativePath) return null;
+    return convertFileSrc(`${projectPath}/${cameraSource.relativePath}`);
+  }, [projectId, projectPath, sources]);
+
+  const micSrc = useMemo(() => {
+    if (!projectId || !projectPath) return null;
+    const micSource = sources.find(s => s.mediaType === 'mic');
+    if (!micSource || !micSource.relativePath) return null;
+    return convertFileSrc(`${projectPath}/${micSource.relativePath}`);
+  }, [projectId, projectPath, sources]);
+
   const activeZoom = useZoomStore((s) => s.getActiveSegment(playheadMs));
+// ... continue zoomTransform logic but keeping everything intact until WebcamOverlay
+
 
   // Compute zoom transform
   const zoomTransform = useMemo(() => {
@@ -189,6 +213,9 @@ export function PreviewCanvas() {
           <WebcamOverlay
             webcam={webcam}
             canvasPadding={padding}
+            cameraSrc={cameraSrc}
+            playheadMs={playheadMs}
+            isPlaying={isPlaying}
           />
         )}
 
@@ -219,11 +246,10 @@ export function PreviewCanvas() {
             {zoomTransform.scale.toFixed(1)}×
           </div>
         )}
+
+        {/* Hidden audio element for microphone playback */}
+        {micSrc && <audio ref={audioRef} src={micSrc} className="hidden" />}
       </div>
     </div>
   );
-}
-
-function getVideoSrc(): string | null {
-  return null;
 }

@@ -9,10 +9,17 @@ import { Button } from '../ui/button';
 import { tauriCommand } from '@/hooks/use-tauri-command';
 
 export function TimelinePanel() {
-  const { playheadMs, isPlaying, durationMs, setPlaying, setPlayhead, activeTool } = useProjectStore();
+  const { playheadMs, isPlaying, durationMs, setPlaying, setPlayhead, activeTool, projectId, projectPath, sources } = useProjectStore();
   const { segments, setSegments, isAnalyzing, setAnalyzing } = useZoomStore();
   const [speedSegments, setSpeedSegments] = useState<any[]>([]);
   const rulerRef = useRef<HTMLDivElement>(null);
+
+  const micSrc = useMemo(() => {
+    if (!projectId || !projectPath) return null;
+    const micSource = sources.find((s) => s.mediaType === 'mic');
+    if (!micSource || !micSource.relativePath) return null;
+    return `${projectPath}/${micSource.relativePath}`;
+  }, [projectId, projectPath, sources]);
 
   const formatTime = (ms: number) => {
     const seconds = Math.floor(ms / 1000);
@@ -181,7 +188,7 @@ export function TimelinePanel() {
                     style={{ width: `${clipWidth}px` }}
                   >
                     <WaveformTrack
-                      audioPath={null}
+                      audioPath={micSrc}
                       durationMs={durationMs}
                       pixelsPerSecond={pixelsPerSecond}
                       trackOffset={0}

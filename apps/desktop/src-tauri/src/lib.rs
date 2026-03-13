@@ -21,6 +21,8 @@ pub fn run() {
             commands::project::load_project,
             commands::project::undo,
             commands::project::redo,
+            commands::project::get_default_projects_dir,
+            commands::project::list_recent_projects,
             // Recording commands
             commands::recording::start_recording,
             commands::recording::pause_recording,

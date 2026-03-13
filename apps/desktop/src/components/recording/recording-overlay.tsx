@@ -4,6 +4,7 @@ import { useRecordingStore } from '@/stores/recording-store';
 import { useUIStore } from '@/stores/ui-store';
 import { recordingCommands, projectCommands } from '@/hooks/use-tauri-command';
 import { motion } from 'framer-motion';
+import { hydrateProject } from '@/stores/project-store';
 
 interface CaptureEvent {
   event: string;
@@ -59,7 +60,8 @@ export function RecordingOverlay() {
     if (data.output_dir) {
       try {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        await projectCommands.createFromRecording(`Recording ${timestamp}`, data.output_dir);
+        const jsonStr = await projectCommands.createFromRecording(`Recording ${timestamp}`, data.output_dir);
+        hydrateProject(jsonStr, data.output_dir);
         setView('editor');
       } catch (e) {
         console.error('Failed to create project from recording:', e);
