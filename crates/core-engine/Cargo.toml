@@ -1,0 +1,16 @@
+[package]
+name = "core-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Command stack, timeline operations, and zoom analysis for ScreenCraft"
+
+[dependencies]
+project-model = { path = "../project-model" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }

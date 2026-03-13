@@ -1,0 +1,11 @@
+{
+  "identifier": "default",
+  "description": "Default capability for ScreenCraft",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "fs:default",
+    "shell:default"
+  ]
+}
