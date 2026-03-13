@@ -53,3 +53,12 @@ export const sourceCommands = {
   listMics: () => tauriCommand<string>('list_mics'),
   listCameras: () => tauriCommand<string>('list_cameras'),
 };
+
+/**
+ * Permissions commands
+ */
+export const permissionCommands = {
+  checkPermissions: () => tauriCommand<string>('check_permissions'),
+  requestPermission: (type: 'screen' | 'camera' | 'microphone' | 'accessibility') =>
+    tauriCommand<string>('request_permission', { permissionType: type }),
+};

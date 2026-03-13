@@ -7,3 +7,4 @@ pub mod export;
 pub mod timeline;
 pub mod share;
 pub mod proxy;
+pub mod permissions;

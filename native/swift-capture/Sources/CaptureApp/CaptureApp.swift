@@ -34,6 +34,17 @@ struct CaptureApp {
                 handleListMics()
             case "list-cameras":
                 handleListCameras()
+            case "check-permissions":
+                handleCheckPermissions()
+            case "request-permission":
+                let typeIdx = args.firstIndex(of: "request-permission")! + 1
+                if typeIdx < args.count {
+                    let pType = args[typeIdx]
+                    handleRequestPermission(type: pType)
+                } else {
+                    emitError("Missing permission type (screen/camera/microphone/accessibility)")
+                    Foundation.exit(1)
+                }
             default:
                 emitError("Unknown command: \(command)")
                 Foundation.exit(1)
@@ -190,6 +201,18 @@ struct CaptureApp {
             ["id": c.uniqueID, "name": c.localizedName] as [String: Any]
         }
         printJSON(["cameras": result])
+    }
+    
+    // MARK: - Permissions
+    
+    static func handleCheckPermissions() {
+        let perms = PermissionsManager.checkPermissions()
+        printJSON(["permissions": perms])
+    }
+    
+    static func handleRequestPermission(type: String) {
+        PermissionsManager.requestPermission(type: type)
+        handleCheckPermissions()
     }
     
     // MARK: - Config Parsing

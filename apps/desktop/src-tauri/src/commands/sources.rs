@@ -43,7 +43,7 @@ pub fn list_cameras(
     CaptureManager::list_sources(&helper_path, "cameras")
 }
 
-fn get_helper_path(app_handle: &AppHandle, state: &State<'_, AppState>) -> Result<PathBuf, String> {
+pub fn get_helper_path(app_handle: &AppHandle, state: &State<'_, AppState>) -> Result<PathBuf, String> {
     let mut mgr_lock = state.capture_manager.lock().map_err(|e| e.to_string())?;
     if mgr_lock.is_none() {
         *mgr_lock = Some(CaptureManager::new(app_handle));

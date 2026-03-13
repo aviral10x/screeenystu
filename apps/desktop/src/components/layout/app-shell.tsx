@@ -8,11 +8,12 @@ import { RecordingSetup } from '../recording/recording-setup';
 import { RecordingOverlay } from '../recording/recording-overlay';
 import { ExportDialog } from '../export/export-dialog';
 import { QuickShare } from '../share/quick-share';
+import { PermissionsWizard } from './permissions-wizard';
 import { useUIStore } from '@/stores/ui-store';
 import { useRecordingStore } from '@/stores/recording-store';
 import { useShortcuts } from '@/hooks/use-shortcuts';
 import { useAutoSave } from '@/hooks/use-auto-save';
-import { projectCommands } from '@/hooks/use-tauri-command';
+import { projectCommands, permissionCommands } from '@/hooks/use-tauri-command';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hydrateProject } from '@/stores/project-store';
@@ -23,6 +24,36 @@ export function AppShell() {
   const [showExport, setShowExport] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [lastExportPath, setLastExportPath] = useState<string | null>(null);
+  
+  // Permissions State
+  const [permissionsGranted, setPermissionsGranted] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkCorePermissions = async () => {
+      try {
+        const resStr = await permissionCommands.checkPermissions();
+        const { permissions } = JSON.parse(resStr);
+        if (permissions.screen && permissions.accessibility) {
+          setPermissionsGranted(true);
+        } else {
+          setPermissionsGranted(false);
+        }
+      } catch (e) {
+        console.error('Failed to check permissions on boot:', e);
+        // Fallback to true if we fail (e.g., in dev browser) so we don't hardlock
+        setPermissionsGranted(true);
+      }
+    };
+    checkCorePermissions();
+  }, []);
+
+  if (permissionsGranted === false) {
+    return <PermissionsWizard onComplete={() => setPermissionsGranted(true)} />;
+  }
+
+  if (permissionsGranted === null) {
+    return <div className="min-h-screen bg-surface-950 flex items-center justify-center" />;
+  }
 
   // Global keyboard shortcuts
   useShortcuts();

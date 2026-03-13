@@ -60,6 +60,9 @@ pub fn run() {
             // Proxy commands
             commands::proxy::generate_proxy,
             commands::proxy::check_proxy,
+            // Permissions commands
+            commands::permissions::check_permissions,
+            commands::permissions::request_permission,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ScreenCraft");
