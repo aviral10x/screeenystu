@@ -111,9 +111,18 @@ export function PreviewCanvas() {
   }, [setPlaying, setPlayhead]);
 
   // Background style
+  // Background style
   const bgStyle = useMemo(() => {
-    if (background.gradient) return { background: background.gradient };
-    if (background.color) return { backgroundColor: background.color };
+    if (background.type === 'wallpaper') {
+      // Simulate wallpaper with a vibrant dynamic gradient for now since we don't have images
+      return { background: 'linear-gradient(135deg, #4f46e5, #ec4899)' };
+    }
+    if (background.type === 'gradient' && background.gradientColors) {
+      return { background: `linear-gradient(135deg, ${background.gradientColors[0]}, ${background.gradientColors[1]})` };
+    }
+    if (background.type === 'color' && background.color) {
+      return { backgroundColor: background.color };
+    }
     return { backgroundColor: '#09090b' };
   }, [background]);
 
