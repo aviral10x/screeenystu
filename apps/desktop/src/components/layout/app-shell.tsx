@@ -9,6 +9,7 @@ import { RecordingOverlay } from '../recording/recording-overlay';
 import { ExportDialog } from '../export/export-dialog';
 import { QuickShare } from '../share/quick-share';
 import { PermissionsWizard } from './permissions-wizard';
+import { SettingsPanel } from '../settings/settings-panel';
 import { useUIStore } from '@/stores/ui-store';
 import { useRecordingStore } from '@/stores/recording-store';
 import { useShortcuts } from '@/hooks/use-shortcuts';
@@ -67,6 +68,11 @@ export function AppShell() {
     window.addEventListener('open-export', handler);
     return () => window.removeEventListener('open-export', handler);
   }, []);
+
+  // Settings view
+  if (view === 'settings') {
+    return <SettingsPanel />;
+  }
 
   // Home view
   if (view === 'home') {

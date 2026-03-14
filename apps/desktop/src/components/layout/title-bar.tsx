@@ -7,7 +7,7 @@ interface TitleBarProps {
 }
 
 export function TitleBar({ onExport }: TitleBarProps) {
-  const { view, toggleSidebar, toggleInspector } = useUIStore();
+  const { view, toggleSidebar, toggleInspector, setView } = useUIStore();
   const { projectName, isDirty, canUndo, canRedo } = useProjectStore();
 
   return (
@@ -72,8 +72,21 @@ export function TitleBar({ onExport }: TitleBarProps) {
             >
               Export
             </button>
+            <div className="h-4 w-px bg-surface-700 mx-1" />
           </>
         )}
+        {/* Settings gear — always visible */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setView('settings')}
+          title="Settings"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+        </Button>
       </div>
     </header>
   );
