@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useZoomStore, type ZoomSegment } from '@/stores/zoom-store';
-import { useCursorStore, type ClickEffectStyle } from '@/stores/cursor-store';
+import { useCursorStore, type CursorPredefinedStyle, type ClickSound, type RotationType, type ClickEffectStyle } from '@/stores/cursor-store';
 import { useCanvasStore, WALLPAPER_CATEGORIES, GRADIENT_PRESETS, type AspectRatio } from '@/stores/canvas-store';
 import { useIntroOutroStore, type IntroStyle, type OutroStyle } from '@/stores/intro-outro-store';
 import type { FrameStyle } from '@/components/canvas/window-frame';
@@ -59,7 +59,7 @@ function CanvasInspector() {
       <div className="p-4 space-y-6 overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-[#2D2E40]">
         
         {/* Aspect Ratio */}
-        <Section label="Aspect Ratio">
+        <Section label="Aspect ratio">
           <div className="grid grid-cols-3 gap-1.5">
             {(['16:9', '9:16', '1:1', '16:10', '4:3', 'auto'] as AspectRatio[]).map((ratio) => (
               <button
@@ -209,7 +209,7 @@ function CanvasInspector() {
 
         <Divider />
 
-        {/* Window Frame */}
+    {/* Window Frame */}
         <Section label="Window Frame">
           <div className="grid grid-cols-2 gap-1.5">
             {([['none', 'None'], ['macos', 'macOS'], ['browser', 'Browser'], ['clean', 'Clean']] as [FrameStyle, string][]).map(([id, label]) => (
@@ -227,6 +227,74 @@ function CanvasInspector() {
             ))}
           </div>
         </Section>
+
+        <Divider />
+
+        {/* Cursor */}
+        <div className="space-y-6">
+          <Section label="Cursor size" action={<ResetButton onClick={() => setStyle({ size: 20 })} />}>
+            <SliderRow value={style.size} min={10} max={100} onChange={(v) => setStyle({ size: v })} hideValue />
+          </Section>
+
+          <Section label="Cursor style">
+            <div className="flex gap-1.5 mt-2">
+              {(['default', 'pointer', 'circle', 'custom1', 'custom2'] as CursorPredefinedStyle[]).map((shape) => (
+                <button
+                  key={shape}
+                  onClick={() => setStyle({ cursorStyle: shape })}
+                  className={`flex-1 h-9 rounded-xl border flex items-center justify-center transition-colors ${
+                    style.cursorStyle === shape
+                      ? 'border-[#7C5CFC] bg-[#7C5CFC]/10 text-[#7C5CFC]'
+                      : 'border-[#2D2E40] bg-[#1C1D20] text-[#A0A2B1] hover:text-white hover:border-[#4A4B53]'
+                  }`}
+                >
+                  {shape === 'default' && <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2l12 11.2-5.8.5 3.3 7.3-2.2.9-3.2-7.4-4.4 5z"/></svg>}
+                  {shape === 'pointer' && <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>}
+                  {shape === 'circle' && <div className="w-4 h-4 rounded-full bg-current" />}
+                  {shape === 'custom1' && <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3l18 9-18 9v-18z"/></svg>}
+                  {shape === 'custom2' && <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21 3L3 12l18 9v-18z"/></svg>}
+                </button>
+              ))}
+            </div>
+          </Section>
+
+          <LabeledToggle 
+            label="Always use pointer cursor" 
+            description="Don't change cursor, even if selecting text, etc."
+            checked={style.alwaysUsePointer} 
+            onChange={(v) => setStyle({ alwaysUsePointer: v })} 
+          />
+
+          <Divider />
+
+          <LabeledToggle 
+            label="Hide cursor if not moving" 
+            checked={style.hideIfNotMoving} 
+            onChange={(v) => setStyle({ hideIfNotMoving: v })} 
+          />
+
+          <LabeledToggle 
+            label="Loop cursor position" 
+            description="Near the end of the video, cursor will move back to its initial position"
+            checked={style.loopCursorPosition} 
+            onChange={(v) => setStyle({ loopCursorPosition: v })} 
+          />
+
+          <LabeledToggle 
+            label="Hide cursor" 
+            icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/><circle cx="12" cy="12" r="3" stroke="currentColor" fill="none" /></svg>}
+            checked={style.hideCursor} 
+            onChange={(v) => setStyle({ hideCursor: v })} 
+          />
+
+          <Divider />
+
+          <div className="space-y-0">
+            <DropdownRow label="Click effect" />
+            <DropdownRow label="Click sound" />
+            <DropdownRow label="Rotation" />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -288,7 +356,7 @@ function Section({ label, children, action }: { label: string; children: React.R
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label className="text-[11px] text-[#A0A2B1] uppercase tracking-wider font-medium">{label}</label>
+        <label className="text-[12px] text-[#E4E4E6] font-medium">{label}</label>
         {action}
       </div>
       {children}
@@ -329,6 +397,29 @@ function ToggleRow({ checked, onChange }: { checked: boolean; onChange: (v: bool
     </button>
   );
 }
-function LabeledToggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return <div className="flex items-center justify-between"><span className="text-[11px] text-[#A0A2B1]">{label}</span><ToggleRow checked={checked} onChange={onChange} /></div>;
+function LabeledToggle({ label, description, icon, checked, onChange }: { label: string; description?: string; icon?: React.ReactNode; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className="text-[12px] font-medium text-[#E4E4E6]">{label}</span>
+        </div>
+        {description && <span className="text-[11px] text-[#A0A2B1] leading-relaxed pr-4">{description}</span>}
+      </div>
+      <div className="pt-0.5">
+        <ToggleRow checked={checked} onChange={onChange} />
+      </div>
+    </div>
+  );
+}
+function DropdownRow({ label }: { label: string }) {
+  return (
+    <button className="w-full flex items-center justify-between py-2 text-left group">
+      <span className="text-[12px] font-medium text-[#E4E4E6]">{label}</span>
+      <div className="w-6 h-6 rounded-md bg-[#1C1D20] border border-[#2D2E40] flex items-center justify-center text-[#A0A2B1] group-hover:text-white group-hover:bg-[#252628] transition-colors">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </button>
+  );
 }

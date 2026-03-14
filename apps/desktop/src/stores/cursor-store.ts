@@ -2,13 +2,31 @@ import { create } from 'zustand';
 
 export type ClickEffectStyle = 'ripple' | 'pulse' | 'confetti' | 'ring';
 
+export type CursorPredefinedStyle = 'default' | 'pointer' | 'circle' | 'custom1' | 'custom2';
+export type ClickSound = 'none' | 'click' | 'pop' | 'snap';
+export type RotationType = 'none' | 'auto' | 'fixed';
+
 export interface CursorStyle {
+  // Appearance
   size: number;
+  cursorStyle: CursorPredefinedStyle;
+  
+  // Behavior toggles
+  alwaysUsePointer: boolean;
+  hideIfNotMoving: boolean;
+  loopCursorPosition: boolean;
+  hideCursor: boolean;
+  
+  // Effects
+  clickEffectEnabled: boolean;
+  clickEffectStyle: ClickEffectStyle;
+  clickSound: ClickSound;
+  rotation: RotationType;
+
+  // Legacy/Retained fields
   color: string;
   highlightColor: string;
-  clickEffectEnabled: boolean;
   clickEffectColor: string;
-  clickEffectStyle: ClickEffectStyle;
   shortcutBadgeEnabled: boolean;
   smoothingFactor: number;
   visible: boolean;
@@ -27,12 +45,22 @@ interface CursorState {
 }
 
 const defaultStyle: CursorStyle = {
+  // New Screen Studio fields
   size: 20,
+  cursorStyle: 'default',
+  alwaysUsePointer: false,
+  hideIfNotMoving: false,
+  loopCursorPosition: false,
+  hideCursor: false,
+  clickEffectEnabled: true,
+  clickEffectStyle: 'ripple',
+  clickSound: 'click',
+  rotation: 'auto',
+
+  // Existing/Legacy
   color: '#ffffff',
   highlightColor: '#6366f1',
-  clickEffectEnabled: true,
   clickEffectColor: '#6366f1',
-  clickEffectStyle: 'ripple',
   shortcutBadgeEnabled: true,
   smoothingFactor: 0.15,
   visible: true,
