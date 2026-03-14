@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type RecordingStatus = 'idle' | 'preparing' | 'countdown' | 'recording' | 'paused' | 'finishing';
-export type RecordingTarget = 'fullscreen' | 'window' | 'area';
+export type RecordingTarget = 'fullscreen' | 'window' | 'area' | 'device';
 
 export interface DisplayInfo {
   id: number;
@@ -48,6 +48,7 @@ interface RecordingState {
   selectedDisplayId: number | null;
   selectedWindowId: number | null;
   selectedMicId: string | null;
+  selectedCameraId: string | null;
 
   // Capture output
   captureOutputDir: string | null;
@@ -67,6 +68,7 @@ interface RecordingState {
   selectDisplay: (id: number) => void;
   selectWindow: (id: number) => void;
   selectMic: (uid: string) => void;
+  selectCamera: (id: string) => void;
   setCaptureOutputDir: (dir: string | null) => void;
   reset: () => void;
 }
@@ -87,6 +89,7 @@ export const useRecordingStore = create<RecordingState>((set) => ({
   selectedDisplayId: null,
   selectedWindowId: null,
   selectedMicId: null,
+  selectedCameraId: null,
 
   captureOutputDir: null,
 
@@ -113,6 +116,7 @@ export const useRecordingStore = create<RecordingState>((set) => ({
   selectDisplay: (id) => set({ selectedDisplayId: id }),
   selectWindow: (id) => set({ selectedWindowId: id }),
   selectMic: (uid) => set({ selectedMicId: uid }),
+  selectCamera: (id) => set({ selectedCameraId: id, cameraEnabled: true }),
   setCaptureOutputDir: (dir) => set({ captureOutputDir: dir }),
   reset: () =>
     set({
